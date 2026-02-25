@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BehaviorGuard — Locked</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0c12;--bg1:#0f1218;--bg2:#141820;--bg3:#1a2030;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --txt:#c8d4e8;--txt2:#5a6a82;--txt3:#2e3a4e;
+  --accent:#4d7cfe;--accent2:#6b9fff;
+  --accentbg:rgba(77,124,254,0.08);--accentborder:rgba(77,124,254,0.22);
+  --red:#e05555;--redbg:rgba(224,85,85,0.08);--redborder:rgba(224,85,85,0.25);
+  --yellow:#d4a843;
+  --mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;--radius:10px;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-smoothing:antialiased;font-size:14px;user-select:none}
+.glow{position:fixed;top:-80px;left:50%;transform:translateX(-50%);width:500px;height:260px;background:radial-gradient(ellipse,rgba(224,85,85,.08) 0%,transparent 70%);pointer-events:none}
+.wrap{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:32px 20px}
+
+/* Score ring */
+.ring-wrap{position:relative;width:110px;height:110px;margin-bottom:20px}
+.ring-svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.05);stroke-width:7}
+.ring-arc{fill:none;stroke:var(--red);stroke-width:7;stroke-linecap:round;stroke-dasharray:298.5;stroke-dashoffset:298.5;transition:stroke-dashoffset 1s ease;filter:drop-shadow(0 0 5px rgba(224,85,85,.5))}
+.ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.ring-num{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--red);line-height:1}
+.ring-lbl{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:1px}
+
+h1{font-size:22px;font-weight:700;color:#dde8f8;margin-bottom:8px;letter-spacing:-.2px}
+.sub{font-size:13px;color:var(--txt2);max-width:320px;line-height:1.65;margin-bottom:24px;text-align:center}
+.divider{width:40px;height:1px;background:rgba(255,255,255,.08);margin:0 auto 24px}
+
+/* Card */
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:16px;width:100%;max-width:380px;overflow:hidden}
+.card-line{height:1px;background:linear-gradient(90deg,transparent,rgba(224,85,85,.5),transparent)}
+.card-body{padding:28px 26px}
+
+.page{display:none;flex-direction:column}
+.page.active{display:flex}
+
+.field{margin-bottom:14px}
+.flabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--txt3);margin-bottom:6px;display:block}
+.iwrap{position:relative}
+.inp{width:100%;padding:11px 40px 11px 13px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);color:var(--txt);font-size:13px;font-family:var(--sans);outline:none;transition:.2s}
+.inp:focus{border-color:var(--accent);background:var(--bg3);box-shadow:0 0 0 3px rgba(77,124,254,.1)}
+.inp.shake{animation:shake .4s ease}
+.inp.err-inp{border-color:var(--red);box-shadow:0 0 0 3px var(--redbg)}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--txt3);cursor:pointer;padding:4px;font-size:13px;line-height:1;transition:.15s}
+.eye:hover{color:var(--txt2)}
+.etxt{font-size:12px;color:var(--red);margin-top:5px;display:none}
+.etxt.show{display:block}
+
+.attempts{font-size:12px;color:var(--yellow);margin-bottom:12px;display:none;text-align:center;padding:8px 12px;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);border-radius:var(--radius)}
+.attempts.show{display:block}
+
+.info-box{background:var(--accentbg);border:1px solid var(--accentborder);border-radius:var(--radius);padding:10px 13px;font-size:12px;color:var(--accent2);margin-bottom:14px;line-height:1.6}
+.warn-box{background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.16);border-radius:var(--radius);padding:10px 13px;font-size:12px;color:var(--yellow);margin-bottom:14px;line-height:1.6}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:.18s;margin-bottom:8px}
+.btn-unlock{background:rgba(224,85,85,.1);border:1px solid var(--redborder);color:var(--red)}
+.btn-unlock:hover{background:var(--red);color:#fff;transform:translateY(-1px)}
+.btn-unlock:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-accent:hover{background:var(--accent2);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--txt2);border:1px solid var(--border)}
+.btn-ghost:hover{background:rgba(255,255,255,.04);color:var(--txt)}
+.link-btn{background:none;border:none;color:var(--txt3);font-size:12px;cursor:pointer;font-family:var(--sans);text-decoration:underline;padding:4px;transition:.15s;width:100%;text-align:center;display:block;margin-top:2px}
+.link-btn:hover{color:var(--txt2)}
+
+.rec-choice{display:flex;flex-direction:column;gap:8px;margin-bottom:4px}
+.rc-btn{display:flex;align-items:center;gap:10px;padding:12px 13px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;background:transparent;color:var(--txt);font-family:var(--sans);text-align:left;width:100%;transition:.18s;font-size:13px}
+.rc-btn:hover{border-color:var(--border2);background:rgba(255,255,255,.02)}
+.rc-ico{font-size:16px}
+
+.success-icon{font-size:46px;text-align:center;display:block;margin-bottom:14px;animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="wrap">
+  <div class="ring-wrap">
+    <svg class="ring-svg" width="110" height="110" viewBox="0 0 110 110">
+      <circle class="ring-bg" cx="55" cy="55" r="47.5"/>
+      <circle class="ring-arc" id="arc" cx="55" cy="55" r="47.5"/>
+    </svg>
+    <div class="ring-inner">
+      <span class="ring-num" id="scoreNum">--</span>
+      <span class="ring-lbl">Trust Score</span>
+    </div>
+  </div>
+
+  <h1>Session Locked</h1>
+  <p class="sub">Behavioral patterns don't match your profile. Enter your password to continue.</p>
+  <div class="divider"></div>
+
+  <div class="card">
+    <div class="card-line"></div>
+    <div class="card-body">
+
+      <!-- Enter password -->
+      <div class="page active" id="pgPw">
+        <div class="attempts" id="attemptsBox"></div>
+        <div class="field">
+          <label class="flabel">Password</label>
+          <div class="iwrap">
+            <input class="inp" type="password" id="pwInp" placeholder="Enter your password" autocomplete="current-password">
+            <button class="eye" onclick="toggleVis('pwInp',this)">👁</button>
+          </div>
+          <div class="etxt" id="pwErr">Incorrect password</div>
+        </div>
+        <button class="btn btn-unlock" id="unlockBtn" onclick="submitPw()">Unlock</button>
+        <button class="link-btn" onclick="showPage('pgForgot')">Forgot password?</button>
+      </div>
+
+      <!-- Forgot — choose method -->
+      <div class="page" id="pgForgot">
+        <div class="info-box">Select your recovery method. Must match what you chose during setup.</div>
+        <div class="rec-choice">
+          <button class="rc-btn" onclick="showPage('pgSQ')"><span class="rc-ico">❓</span>Security Questions</button>
+          <button class="rc-btn" onclick="showPage('pgCode')"><span class="rc-ico">🔑</span>Recovery Code</button>
+        </div>
+        <button class="link-btn" style="margin-top:10px" onclick="showPage('pgPw')">← Back to login</button>
+      </div>
+
+      <!-- Security questions -->
+      <div class="page" id="pgSQ">
+        <div class="field">
+          <label class="flabel" id="sq1lbl">Question 1</label>
+          <input class="inp" type="text" id="sq1ans" placeholder="Your answer">
+        </div>
+        <div class="field">
+          <label class="flabel" id="sq2lbl">Question 2</label>
+          <input class="inp" type="text" id="sq2ans" placeholder="Your answer">
+        </div>
+        <div class="etxt" id="sqErr" style="margin-bottom:10px"></div>
+        <button class="btn btn-accent" onclick="submitSQ()">Verify Answers</button>
+        <button class="link-btn" onclick="showPage('pgForgot')">← Back</button>
+      </div>
+
+      <!-- Recovery code -->
+      <div class="page" id="pgCode">
+        <div class="warn-box">Enter your 8-word recovery code, separated by dashes.</div>
+        <div class="field">
+          <label class="flabel">Recovery Code</label>
+          <input class="inp" type="text" id="codeInp" placeholder="word1-word2-word3-word4-word5-word6-word7-word8" style="font-family:var(--mono);font-size:11px">
+          <div class="etxt" id="codeErr">Invalid recovery code</div>
+        </div>
+        <button class="btn btn-accent" onclick="submitCode()">Verify Code</button>
+        <button class="link-btn" onclick="showPage('pgForgot')">← Back</button>
+      </div>
+
+      <!-- Set new password -->
+      <div class="page" id="pgReset">
+        <div class="info-box">✅ Identity verified. Set your new password.</div>
+        <div class="field">
+          <label class="flabel">New Password</label>
+          <div class="iwrap">
+            <input class="inp" type="password" id="newPw1" placeholder="New password">
+            <button class="eye" onclick="toggleVis('newPw1',this)">👁</button>
+          </div>
+        </div>
+        <div class="field">
+          <label class="flabel">Confirm New Password</label>
+          <div class="iwrap">
+            <input class="inp" type="password" id="newPw2" placeholder="Repeat password">
+            <button class="eye" onclick="toggleVis('newPw2',this)">👁</button>
+          </div>
+          <div class="etxt" id="resetErr"></div>
+        </div>
+        <button class="btn btn-accent" onclick="submitReset()">Save & Unlock</button>
+      </div>
+
+      <!-- Done -->
+      <div class="page" id="pgDone">
+        <span class="success-icon">✅</span>
+        <div style="font-size:16px;font-weight:700;text-align:center;margin-bottom:6px;color:#dde8f8">Password Reset</div>
+        <div style="font-size:13px;color:var(--txt2);text-align:center">Your new password has been saved. Unlocking…</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// Score ring
+const params=new URLSearchParams(window.location.hash.replace('#','?'));
+const score=parseFloat(params.get('score')||'12');
+const arcLen=298.5;
+document.getElementById('arc').style.strokeDashoffset=arcLen-(score/100)*arcLen;
+document.getElementById('scoreNum').textContent=Math.round(score);
+
+let attempts=0;
+const MAX=5;
+let recoveryData=null;
+
+if(window.bgAPI){
+  window.bgAPI.getPasswordData().then(d=>{
+    recoveryData=d;
+    if(d?.recovery?.sq){
+      document.getElementById('sq1lbl').textContent=d.recovery.sq.q1||'Question 1';
+      document.getElementById('sq2lbl').textContent=d.recovery.sq.q2||'Question 2';
+    }
+  });
+}
+
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function toggleVis(id,btn){const el=document.getElementById(id);const s=el.type==='password';el.type=s?'text':'password';btn.textContent=s?'🙈':'👁'}
+
+function submitPw(){
+  const val=document.getElementById('pwInp').value;
+  const err=document.getElementById('pwErr');
+  const inp=document.getElementById('pwInp');
+  if(!val){err.classList.add('show');return}
+  if(window.bgAPI){
+    window.bgAPI.checkPassword(val).then(ok=>{
+      if(ok){unlock();}
+      else{
+        attempts++;
+        inp.classList.add('shake','err-inp');
+        setTimeout(()=>{inp.classList.remove('shake');},400);
+        err.classList.add('show');
+        inp.value='';
+        const box=document.getElementById('attemptsBox');
+        if(attempts>=2){box.textContent=`${MAX-attempts} attempt${MAX-attempts===1?'':'s'} remaining`;box.classList.add('show')}
+        if(attempts>=MAX){
+          box.textContent='Too many attempts. Use forgot password to recover.';
+          document.getElementById('pwInp').disabled=true;
+          document.getElementById('unlockBtn').disabled=true;
+        }
+      }
+    });
+  } else {
+    if(val==='password') unlock();
+    else{err.classList.add('show');inp.classList.add('shake');setTimeout(()=>inp.classList.remove('shake'),400);}
+  }
+}
+
+function submitSQ(){
+  const a1=document.getElementById('sq1ans').value.trim().toLowerCase();
+  const a2=document.getElementById('sq2ans').value.trim().toLowerCase();
+  const err=document.getElementById('sqErr');
+  if(!recoveryData?.recovery?.sq){err.textContent='Security questions not configured.';err.classList.add('show');return}
+  if(a1===recoveryData.recovery.sq.a1&&a2===recoveryData.recovery.sq.a2){
+    showPage('pgReset');
+  } else {
+    err.textContent='Answers do not match. Try again.';err.classList.add('show');
+    ['sq1ans','sq2ans'].forEach(id=>{const el=document.getElementById(id);el.classList.add('shake','err-inp');setTimeout(()=>el.classList.remove('shake'),400);});
+  }
+}
+
+function submitCode(){
+  const val=document.getElementById('codeInp').value.trim().toLowerCase();
+  const err=document.getElementById('codeErr');
+  if(!recoveryData?.recovery?.code){err.textContent='Recovery code not configured.';err.classList.add('show');return}
+  if(val===recoveryData.recovery.code){showPage('pgReset');}
+  else{err.classList.add('show');const el=document.getElementById('codeInp');el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),400);}
+}
+
+function submitReset(){
+  const p1=document.getElementById('newPw1').value;
+  const p2=document.getElementById('newPw2').value;
+  const err=document.getElementById('resetErr');
+  if(p1!==p2){err.textContent='Passwords do not match';err.classList.add('show');return}
+  if(p1.length<6){err.textContent='Password must be at least 6 characters';err.classList.add('show');return}
+  err.classList.remove('show');
+  if(window.bgAPI){window.bgAPI.resetPassword(p1).then(()=>{showPage('pgDone');setTimeout(unlock,2000);})}
+  else{showPage('pgDone');setTimeout(unlock,2000);}
+}
+
+function unlock(){if(window.bgAPI)window.bgAPI.unlock();else window.close();}
+
+document.addEventListener('keydown',e=>{
+  const active=document.querySelector('.page.active');
+  if(e.key==='Enter'){
+    if(active?.id==='pgPw') submitPw();
+    if(active?.id==='pgSQ') submitSQ();
+    if(active?.id==='pgCode') submitCode();
+    if(active?.id==='pgReset') submitReset();
+  }
+});
+
+// focus password input on load
+window.addEventListener('load',()=>setTimeout(()=>document.getElementById('pwInp')?.focus(),200));
+</script>
+</body>
+</html>

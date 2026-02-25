@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BehaviorGuard — Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0c12;--bg1:#0f1218;--bg2:#141820;--bg3:#1a2030;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --txt:#c8d4e8;--txt2:#5a6a82;--txt3:#2e3a4e;
+  --accent:#4d7cfe;--accent2:#6b9fff;
+  --accentbg:rgba(77,124,254,0.08);--accentborder:rgba(77,124,254,0.22);
+  --red:#e05555;--redbg:rgba(224,85,85,0.08);
+  --yellow:#d4a843;
+  --mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;--radius:10px;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-font-smoothing:antialiased;font-size:14px}
+.glow{position:fixed;top:-100px;left:50%;transform:translateX(-50%);width:500px;height:260px;background:radial-gradient(ellipse,rgba(77,124,254,.09) 0%,transparent 70%);pointer-events:none}
+.wrap{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 20px}
+.stepper{display:flex;align-items:center;gap:6px;margin-bottom:36px}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--bg3);transition:.3s}
+.sdot.active{background:var(--accent);width:22px;border-radius:99px}
+.sdot.done{background:var(--txt3)}
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:16px;width:100%;max-width:420px;overflow:hidden}
+.card-line{height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.5}
+.card-body{padding:34px 30px}
+.card-icon{width:46px;height:46px;border-radius:11px;background:var(--accentbg);border:1px solid var(--accentborder);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:18px}
+.card-title{font-size:19px;font-weight:700;color:#dde8f8;margin-bottom:5px;letter-spacing:-.2px}
+.card-sub{font-size:13px;color:var(--txt2);line-height:1.65;margin-bottom:26px}
+.page{display:none;flex-direction:column}
+.page.active{display:flex}
+.field{margin-bottom:16px}
+.flabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--txt3);margin-bottom:6px;display:block}
+.iwrap{position:relative}
+.inp{width:100%;padding:11px 40px 11px 13px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);color:var(--txt);font-size:13px;font-family:var(--sans);outline:none;transition:.2s}
+.inp:focus{border-color:var(--accent);background:var(--bg3);box-shadow:0 0 0 3px rgba(77,124,254,.1)}
+.inp.err{border-color:var(--red);box-shadow:0 0 0 3px var(--redbg)}
+.eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--txt3);cursor:pointer;padding:4px;font-size:13px;line-height:1;transition:.15s}
+.eye:hover{color:var(--txt2)}
+select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%232e3a4e' stroke-width='2.5'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+select.inp option{background:#141820}
+.strack{height:2px;background:var(--bg3);border-radius:99px;overflow:hidden;margin:7px 0 4px}
+.sfill{height:100%;border-radius:99px;transition:width .3s,background .3s;width:0}
+.slabel{font-size:11px;color:var(--txt3)}
+.etxt{font-size:12px;color:var(--red);margin-top:5px;display:none}
+.etxt.show{display:block}
+.rec-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.ropt{display:flex;align-items:center;gap:11px;padding:12px 13px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;background:transparent;color:var(--txt);font-family:var(--sans);text-align:left;width:100%;transition:.18s}
+.ropt:hover{border-color:var(--border2);background:rgba(255,255,255,.02)}
+.ropt.sel{border-color:var(--accentborder);background:var(--accentbg)}
+.ropt-ico{font-size:17px;flex-shrink:0}
+.ropt-title{font-size:13px;font-weight:600;display:block;margin-bottom:1px;color:#c8d4e8}
+.ropt-desc{font-size:11px;color:var(--txt2)}
+.sq-fields{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
+.code-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;margin-bottom:12px;font-family:var(--mono);font-size:12px;color:var(--accent2);letter-spacing:.3px;text-align:center;line-height:1.9;word-break:break-all}
+.code-warn{background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.16);border-radius:var(--radius);padding:10px 13px;font-size:12px;color:var(--yellow);margin-bottom:12px;line-height:1.6}
+.copy-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:12px;color:var(--txt2);margin-bottom:18px;transition:.15s;font-family:var(--sans)}
+.copy-btn:hover{background:rgba(255,255,255,.06);color:var(--txt)}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:.18s}
+.btn-p{background:var(--accent);color:#fff}
+.btn-p:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(77,124,254,.22)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-g{background:transparent;color:var(--txt2);border:1px solid var(--border);margin-top:8px}
+.btn-g:hover{background:rgba(255,255,255,.04);color:var(--txt)}
+.done-icon{font-size:50px;text-align:center;display:block;margin-bottom:16px;animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.done-list{display:flex;flex-direction:column;gap:7px;margin-bottom:22px}
+.done-item{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--txt2);padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius)}
+.done-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="wrap">
+  <div class="stepper">
+    <div class="sdot active" id="sd1"></div>
+    <div class="sdot" id="sd2"></div>
+    <div class="sdot" id="sd3"></div>
+  </div>
+  <div class="card">
+    <div class="card-line"></div>
+    <div class="card-body">
+
+      <!-- PAGE 1: Password -->
+      <div class="page active" id="pg1">
+        <div class="card-icon">🔐</div>
+        <div class="card-title">Create a Password</div>
+        <div class="card-sub">Protects your lock screen. Set once here — change anytime in Settings.</div>
+        <div class="field">
+          <label class="flabel">Password</label>
+          <div class="iwrap">
+            <input class="inp" type="password" id="pw1" placeholder="Enter password" autocomplete="new-password">
+            <button class="eye" onclick="toggleVis('pw1',this)">👁</button>
+          </div>
+          <div class="strack"><div class="sfill" id="sFill"></div></div>
+          <div class="slabel" id="sLabel">—</div>
+        </div>
+        <div class="field">
+          <label class="flabel">Confirm Password</label>
+          <div class="iwrap">
+            <input class="inp" type="password" id="pw2" placeholder="Repeat password" autocomplete="new-password">
+            <button class="eye" onclick="toggleVis('pw2',this)">👁</button>
+          </div>
+          <div class="etxt" id="pwErr">Passwords do not match</div>
+        </div>
+        <button class="btn btn-p" id="pg1btn" onclick="toPg2()" disabled>Continue</button>
+      </div>
+
+      <!-- PAGE 2: Recovery -->
+      <div class="page" id="pg2">
+        <div class="card-icon">🛟</div>
+        <div class="card-title">Password Recovery</div>
+        <div class="card-sub">How will you recover access if you forget your password?</div>
+        <div class="rec-opts">
+          <button class="ropt sel" id="ropt-sq" onclick="selectRec('sq')">
+            <span class="ropt-ico">❓</span>
+            <div><span class="ropt-title">Security Questions</span><span class="ropt-desc">Answer 2 personal questions</span></div>
+          </button>
+          <button class="ropt" id="ropt-code" onclick="selectRec('code')">
+            <span class="ropt-ico">🔑</span>
+            <div><span class="ropt-title">Recovery Code</span><span class="ropt-desc">Save a one-time backup code</span></div>
+          </button>
+        </div>
+        <div class="sq-fields" id="sqFields">
+          <div>
+            <label class="flabel">Question 1</label>
+            <select class="inp" id="sq1q" style="margin-bottom:7px">
+              <option value="">Choose a question…</option>
+              <option>What was the name of your first pet?</option>
+              <option>What city were you born in?</option>
+              <option>What is your mother's maiden name?</option>
+              <option>What was the name of your elementary school?</option>
+              <option>What was your childhood nickname?</option>
+              <option>What street did you grow up on?</option>
+            </select>
+            <input class="inp" type="text" id="sq1a" placeholder="Your answer">
+          </div>
+          <div>
+            <label class="flabel">Question 2</label>
+            <select class="inp" id="sq2q" style="margin-bottom:7px">
+              <option value="">Choose a question…</option>
+              <option>What was the make of your first car?</option>
+              <option>What was your favorite subject in school?</option>
+              <option>What is your oldest sibling's middle name?</option>
+              <option>What was your childhood best friend's first name?</option>
+              <option>What was the first concert you attended?</option>
+              <option>What hospital were you born in?</option>
+            </select>
+            <input class="inp" type="text" id="sq2a" placeholder="Your answer">
+          </div>
+        </div>
+        <div id="codeFields" style="display:none">
+          <div class="code-warn">⚠ Save this code somewhere safe. It cannot be shown again.</div>
+          <div class="code-box" id="codeDisplay"></div>
+          <button class="copy-btn" id="copyBtn" onclick="copyCode()">📋 Copy to clipboard</button>
+        </div>
+        <div class="etxt" id="recErr" style="margin-bottom:12px"></div>
+        <button class="btn btn-p" onclick="toPg3()">Finish Setup</button>
+        <button class="btn btn-g" onclick="toPg1()">← Back</button>
+      </div>
+
+      <!-- PAGE 3: Done -->
+      <div class="page" id="pg3">
+        <span class="done-icon">✅</span>
+        <div class="card-title" style="text-align:center;margin-bottom:6px">You're Protected</div>
+        <div class="card-sub" style="text-align:center;margin-bottom:20px">BehaviorGuard is configured and will begin learning your behavior.</div>
+        <div class="done-list">
+          <div class="done-item"><div class="done-dot"></div>Lock screen password saved</div>
+          <div class="done-item"><div class="done-dot"></div>Recovery method configured</div>
+          <div class="done-item"><div class="done-dot"></div>Behavioral training begins now</div>
+        </div>
+        <button class="btn btn-p" onclick="finish()">Open Dashboard</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+'use strict';
+let recMethod='sq', generatedCode='', finalPw='';
+const WORDS=['alpha','brave','cedar','delta','ember','frost','grove','haven','ivory','jade','kite','lunar','maple','nexus','onyx','pearl','quartz','raven','stone','tidal','ultra','vapor','waltz','xenon','yield','zonal','amber','blaze','crown','drift'];
+function genCode(){return Array.from({length:8},()=>WORDS[Math.floor(Math.random()*WORDS.length)]).join('-')}
+function toggleVis(id,btn){const el=document.getElementById(id);const s=el.type==='password';el.type=s?'text':'password';btn.textContent=s?'🙈':'👁'}
+document.getElementById('pw1').addEventListener('input',function(){
+  const v=this.value;let s=0;
+  if(v.length>=8)s++;if(v.length>=12)s++;if(/[A-Z]/.test(v))s++;if(/[0-9]/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;
+  const cols=['#e05555','#e05555','#d4a843','#d4a843','#4d7cfe','#4d7cfe'];
+  const lbls=['Too short','Weak','Fair','Good','Strong','Excellent'];
+  const fill=document.getElementById('sFill'),lbl=document.getElementById('sLabel');
+  fill.style.width=v.length?(s/5*100)+'%':'0';fill.style.background=cols[s];
+  lbl.textContent=v.length?lbls[s]:'—';lbl.style.color=v.length?cols[s]:'var(--txt3)';
+  checkMatch();
+});
+document.getElementById('pw2').addEventListener('input',checkMatch);
+function checkMatch(){
+  const v1=document.getElementById('pw1').value,v2=document.getElementById('pw2').value;
+  const err=document.getElementById('pwErr'),btn=document.getElementById('pg1btn');
+  if(!v2.length){err.classList.remove('show');btn.disabled=true;return}
+  const ok=v1===v2&&v1.length>=6;
+  err.classList.toggle('show',!ok);
+  document.getElementById('pw2').classList.toggle('err',!ok);
+  btn.disabled=!ok;
+}
+function selectRec(m){
+  recMethod=m;
+  document.getElementById('ropt-sq').classList.toggle('sel',m==='sq');
+  document.getElementById('ropt-code').classList.toggle('sel',m==='code');
+  document.getElementById('sqFields').style.display=m==='sq'?'flex':'none';
+  document.getElementById('sqFields').style.flexDirection='column';
+  document.getElementById('codeFields').style.display=m==='code'?'block':'none';
+}
+function toPg1(){setPage(1)}
+function toPg2(){
+  finalPw=document.getElementById('pw1').value;
+  generatedCode=genCode();
+  document.getElementById('codeDisplay').textContent=generatedCode;
+  setPage(2);
+}
+function toPg3(){
+  const err=document.getElementById('recErr');
+  if(recMethod==='sq'){
+    const q1=document.getElementById('sq1q').value,a1=document.getElementById('sq1a').value.trim();
+    const q2=document.getElementById('sq2q').value,a2=document.getElementById('sq2a').value.trim();
+    if(!q1||!a1||!q2||!a2){err.textContent='Please complete all fields.';err.classList.add('show');return}
+  }
+  err.classList.remove('show');
+  const data={password:finalPw,recovery:{method:recMethod,
+    sq:recMethod==='sq'?{q1:document.getElementById('sq1q').value,a1:document.getElementById('sq1a').value.trim().toLowerCase(),q2:document.getElementById('sq2q').value,a2:document.getElementById('sq2a').value.trim().toLowerCase()}:null,
+    code:recMethod==='code'?generatedCode:null}};
+  if(window.bgAPI){window.bgAPI.savePassword(data).then(()=>setPage(3));}
+  else setPage(3);
+}
+function finish(){if(window.bgAPI)window.bgAPI.finishSetup();else console.log('done')}
+function setPage(n){
+  document.querySelectorAll('.page').forEach((p,i)=>p.classList.toggle('active',i===n-1));
+  ['sd1','sd2','sd3'].forEach((id,i)=>{const el=document.getElementById(id);el.classList.remove('active','done');if(i<n-1)el.classList.add('done');else if(i===n-1)el.classList.add('active');});
+}
+function copyCode(){
+  navigator.clipboard.writeText(generatedCode).then(()=>{
+    const btn=document.getElementById('copyBtn');btn.textContent='✅ Copied!';
+    setTimeout(()=>{btn.textContent='📋 Copy to clipboard'},2000);
+  });
+}
+</script>
+</body>
+</html>

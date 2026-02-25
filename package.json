@@ -1,0 +1,54 @@
+{
+  "name": "behaviorguard",
+  "version": "2.2.0",
+  "description": "System-wide behavioral biometric security",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev":   "electron . --enable-logging",
+    "build": "electron-builder --publish never",
+    "build:win":   "electron-builder --win --publish never",
+    "build:mac":   "electron-builder --mac --publish never",
+    "build:linux": "electron-builder --linux --publish never"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "uiohook-napi":   "^1.5.3"
+  },
+  "devDependencies": {
+    "electron":         "^28.2.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId":       "com.behaviorguard.desktop",
+    "productName": "BehaviorGuard",
+    "asar":        true,
+    "files": ["**/*", "!node_modules/.cache", "!dist"],
+    "extraResources": [],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "icon": "assets/icon.icns",
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "hardenedRuntime": true
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "target": ["AppImage", "deb"],
+      "category": "Utility"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
